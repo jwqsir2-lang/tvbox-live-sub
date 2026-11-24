@@ -71,19 +71,22 @@ def main():
         print("WARNING: no live groups parsed from upstream; keeping existing output")
         sys.exit(0)
 
+    # lives are fully REPLACED by the upstream live.txt groups — the base
+    # template's own live groups (央/卫/新闻/体育/其他) are intentionally dropped
+    # so the config only carries whatever upstream live.txt ships.
     epg = DEFAULT_EPG
     if base.get("lives"):
         epg = base["lives"][0].get("epg", DEFAULT_EPG)
 
-    new_lives = [OrderedDict(g) for g in base.get("lives", [])]
-    base_names = {l.get("group") for l in new_lives}
+    seen = set()
+    new_lives = []
     for g in live_groups:
         name = g["group"]
         suffix = 2
-        while name in base_names:
+        while name in seen:
             name = f"{g['group']}{suffix}"
             suffix += 1
-        base_names.add(name)
+        seen.add(name)
         ng = OrderedDict()
         ng["group"] = name
         ng["epg"] = epg
