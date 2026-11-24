@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Merge upstream live.txt into the base TVBox config.
+"""Merge upstream live.txt into the base TVBox config (musebox / TVBoxQ edition).
 
-- base.json is the FIXED template: VOD sites / parses / flags / original live groups never change.
-- Pulls live.txt (standard "#genre#" text format), parses groups, appends them to `lives`,
-  and rewrites TVBoxv3xg.json. Runs on a schedule via GitHub Actions.
+- base.json is the FIXED template: VOD sites / parses / flags / original live
+  groups never change.
+- Pulls live.txt (standard "#genre#" text format), parses groups, filters out
+  non-playable junk (.php interfaces, ad rows, non-m3u8 pages), dedupes, and
+  rewrites TVBoxv3xg.json. Runs on a schedule via GitHub Actions.
 """
 import json
 import re
@@ -15,6 +17,16 @@ LIVE_TXT_URL = "https://raw.githubusercontent.com/Supprise0901/TVBox_live/main/l
 BASE_FILE = "base.json"
 OUT_FILE = "TVBoxv3xg.json"
 DEFAULT_EPG = "http://epg.112114.xyz/?ch={name}&date={date}"
+
+# A live URL must look like a real stream: m3u8 / ts / flv / rtsp over http(s).
+STREAM_RE = re.compile(r"^https?://[^\s]+\.(m3u8|ts|flv)(\?|$)", re.I)
+# Junk: php interfaces (often dynamic redirect pages), placeholder/test domains,
+# promo/ad rows that are not real channels.
+JUNK_RE = re.compile(r"(\.php(\?|$))|(测试\.)|( nxog\.top)|(716888)|(711888)", re.I)
+
+
+def usable(url):
+    return bool(STREAM_RE.match(url)) and not JUNK_RE.search(url)
 
 
 def parse_live_txt(text):
@@ -32,7 +44,7 @@ def parse_live_txt(text):
         if len(parts) != 2:
             continue
         name, url = parts[0].strip(), parts[1].strip()
-        if not name or not url or not re.match(r"^(https?|rtmp|rtsp)://", url, re.I):
+        if not name or not usable(url):
             continue
         if name in idx:
             if url not in idx[name]["urls"]:
@@ -42,7 +54,8 @@ def parse_live_txt(text):
             idx[name] = ch
             if cur is not None:
                 cur["channels"].append(ch)
-    return groups
+    # drop groups that ended up empty (e.g. the promo-only groups)
+    return [g for g in groups if g["channels"]]
 
 
 def main():
@@ -75,7 +88,18 @@ def main():
         ng["group"] = name
         ng["epg"] = epg
         ng["channels"] = [
-            OrderedDict([("name", c["name"]), ("urls", list(c["urls"]))])
+            OrderedDict(
+                [
+                    ("name", c["name"]),
+                    (
+                        "urls",
+                        [
+                            f"{u}$线路{i + 1}" if "$" not in u else u
+                            for i, u in enumerate(c["urls"])
+                        ],
+                    ),
+                ]
+            )
             for c in g["channels"]
         ]
         new_lives.append(ng)

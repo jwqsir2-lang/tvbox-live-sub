@@ -6,7 +6,7 @@
       "key": "ffzy",
       "name": "非凡资源",
       "type": 1,
-      "api": "http://cj.ffzyapi.com/api.php/provide/vod",
+      "api": "https://api.ffzyapi.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
@@ -15,7 +15,7 @@
       "key": "liangzi",
       "name": "量子资源",
       "type": 1,
-      "api": "http://cj.lziapi.com/api.php/provide/vod",
+      "api": "https://lzizy.net/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
@@ -24,7 +24,7 @@
       "key": "dytt",
       "name": "电影天堂",
       "type": 1,
-      "api": "http://caiji.dyttzyapi.com/api.php/provide/vod",
+      "api": "https://api.dyttcj.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
@@ -33,7 +33,7 @@
       "key": "hongniu",
       "name": "红牛资源",
       "type": 1,
-      "api": "http://www.hongniuzy2.com/api.php/provide/vod",
+      "api": "https://www.hongniuzy3.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
@@ -42,7 +42,52 @@
       "key": "360zy",
       "name": "360资源",
       "type": 1,
-      "api": "http://360zy.com/api.php/provide/vod",
+      "api": "https://360zy.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "guangsu",
+      "name": "光速资源",
+      "type": 1,
+      "api": "https://api.guangsuapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "hhzy",
+      "name": "豪华资源",
+      "type": 1,
+      "api": "https://hhzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "jszy",
+      "name": "极速资源",
+      "type": 1,
+      "api": "https://jszyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "jyzy",
+      "name": "金鹰资源",
+      "type": 1,
+      "api": "https://jyzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "muji",
+      "name": "母鸡资源",
+      "type": 1,
+      "api": "https://mujiziyuan07.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
