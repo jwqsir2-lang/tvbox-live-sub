@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Merge upstream live.txt into the base TVBox config (musebox / TVBoxQ edition).
+"""Merge VOD sites + live.txt into one TVBox config.
 
-- base.json is the FIXED template: VOD sites / parses / flags / original live
-  groups never change.
-- Pulls live.txt (standard "#genre#" text format), parses groups, filters out
-  non-playable junk (.php interfaces, ad rows, non-m3u8 pages), dedupes, and
-  rewrites TVBoxv3xg.json. Runs on a schedule via GitHub Actions.
+No filtering, no dedup: whatever upstream live.txt ships goes in as-is
+(same format the user's working aaa.json uses). Group order follows the
+upstream "#genre#" sections; same-name channels within a group get their
+urls merged into one channel with $线路N aliases.
 """
 import json
-import re
 import sys
 import urllib.request
 from collections import OrderedDict
@@ -17,16 +15,6 @@ LIVE_TXT_URL = "https://raw.githubusercontent.com/Supprise0901/TVBox_live/main/l
 BASE_FILE = "base.json"
 OUT_FILE = "TVBoxv3xg.json"
 DEFAULT_EPG = "http://epg.112114.xyz/?ch={name}&date={date}"
-
-# A live URL must look like a real stream: m3u8 / ts / flv / rtsp over http(s).
-STREAM_RE = re.compile(r"^https?://[^\s]+\.(m3u8|ts|flv)(\?|$)", re.I)
-# Junk: php interfaces (often dynamic redirect pages), placeholder/test domains,
-# promo/ad rows that are not real channels.
-JUNK_RE = re.compile(r"(\.php(\?|$))|(测试\.)|( nxog\.top)|(716888)|(711888)", re.I)
-
-
-def usable(url):
-    return bool(STREAM_RE.match(url)) and not JUNK_RE.search(url)
 
 
 def parse_live_txt(text):
@@ -44,17 +32,15 @@ def parse_live_txt(text):
         if len(parts) != 2:
             continue
         name, url = parts[0].strip(), parts[1].strip()
-        if not name or not usable(url):
+        if not name or not url:
             continue
         if name in idx:
-            if url not in idx[name]["urls"]:
-                idx[name]["urls"].append(url)
+            idx[name]["urls"].append(url)
         else:
             ch = {"name": name, "urls": [url]}
             idx[name] = ch
             if cur is not None:
                 cur["channels"].append(ch)
-    # drop groups that ended up empty (e.g. the promo-only groups)
     return [g for g in groups if g["channels"]]
 
 
@@ -71,9 +57,7 @@ def main():
         print("WARNING: no live groups parsed from upstream; keeping existing output")
         sys.exit(0)
 
-    # lives are fully REPLACED by the upstream live.txt groups — the base
-    # template's own live groups (央/卫/新闻/体育/其他) are intentionally dropped
-    # so the config only carries whatever upstream live.txt ships.
+    # lives are replaced by the upstream live.txt groups, verbatim.
     epg = DEFAULT_EPG
     if base.get("lives"):
         epg = base["lives"][0].get("epg", DEFAULT_EPG)
@@ -91,18 +75,7 @@ def main():
         ng["group"] = name
         ng["epg"] = epg
         ng["channels"] = [
-            OrderedDict(
-                [
-                    ("name", c["name"]),
-                    (
-                        "urls",
-                        [
-                            f"{u}$线路{i + 1}" if "$" not in u else u
-                            for i, u in enumerate(c["urls"])
-                        ],
-                    ),
-                ]
-            )
+            OrderedDict([("name", c["name"]), ("urls", list(c["urls"]))])
             for c in g["channels"]
         ]
         new_lives.append(ng)
